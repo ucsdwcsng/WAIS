@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+
+<!-- 
+Notes: 
+1. Data needed to run this launch file
+/camera/color/image_raw/compressed - if using Camera, converted to Mono8 format
+(old camera) /camera/rgb/image_rect_color/compressed
+
+/imu/microstrain_data - if using IMU
+/mobile_base/sensors/core - !! Unused here, but used in VINS-MONO wheel !!
+/mobile_base/sensors/imu_data - !! Unused here, but interally used to compute Odom !!
+/odom - if using Odom, this is converted to relOdom; assumed to come only from IMU and Encoders
+
+/wifi/ap_angle/ap_xx - if using WiFi, Angle of arrival measured at the AP xx
+/wifi/bot_angle/ap_xx - if using WiFi, Angle of arrival measured at the Bot from AP xx
+-->
+
+<launch>
+   <!-- ARGS -->
+   <arg name="rvizfile"    default = "$(find wifi_backend)/../../rviz/wifi.rviz" />
+
+   <!-- Download the dataset and add the path of the bag file here -->
+   <arg name="bag_path"    default = "/media/aarun/wd_backup/p2slam_realworld/viwid_bags/7-22-short.bag" />
+
+   <!-- PLOTTING - plot the camera and robot odometry information in RVIZ -->
+   <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rvizfile)"/>
+
+   <!-- TOPIC CONVERSIONS - odom to relative odom -->
+   <node pkg="topic_tools" type="throttle" name="odom_throttler"
+         args="messages /odom 8 /odom_throttle" output="screen"/>
+
+   <node pkg="python-nodes" name="relative_odom" type="relative_odom.py"
+         args= "/odom_throttle /relOdom" output="screen"/>
+
+   <!-- CPU AND MEM CHARACTERIZATION -->
+   <include file="$(find cpu_monitor)/launch/cpu_monitor.launch">
+      <arg name="poll_period" value="1.0"/>
+   </include>
+
+   <!-- Image decompressor -->
+   <node name="image_decompress_1" pkg="image_transport" type="republish"
+         args="compressed in:=/camera/infra1/image_rect_raw raw out:=/infra_left"/>
+
+   <!-- MASTER NODE! -->
+   <node pkg="wifi_backend" type="wifio" name="wifio_test1" output="screen" clear_params="true"
+         required="true" launch-prefix="gdb -ex run --args">
+
+      <remap from="/wifio/data_cam"    to="/camera/color/image_raw/compressed" />
+      <remap from="/wifio/data_rel_odom"  to="/relOdom" />
+
+      <param name="fixedId"  type="string" value="world" />
+      <rosparam param="gravity"> [0.0, 0.0, 9.81007] </rosparam>
+
+      <!-- Set which odometry sensor to use -->
+      <param name="useOdom"      type="bool" value="true" />
+      <param name="useAPAngles"  type="bool" value="false" />
+      <param name="useBotAngles" type="bool" value="true" />
+
+      <!-- Topic for AoA messages -->
+      <param name="aoaTopic"  type="string" value="/aoa"  />
+
+      <!-- Setup options for optimizer -->
+      <param name="useISAM"                           type="bool"     value="true" /> <!-- Set true to use end-end ISAM optimization, false to revert to batch methods -->
+      <param name="useBatch"                          type="bool"     value="false" /> <!-- !! WARN: This does not work yet !! Set true to use batch optimization, false to use fixed-lag -->
+      <param name="optimizerLag"                      type="double"   value="60.0" />
+      <param name="huberParam"                        type="double"   value="1.345" />
+      <param name="relinearizeThreshold"              type="double"   value="0.01" />
+      <param name="relinearizeSkip"                   type="int"      value="1" />
+      <param name="cacheLinearizedFactors"            type="bool"     value="false" />
+      <param name="findUnusedFactorSlots"             type="bool"     value="true" />
+      <param name="enablePartialRelinearizationCheck" type="bool"     value="false" /> <!-- Ensure this is set to false -->
+      <param name="optExtraIterations"                type="int"      value="0" /> <!-- Optional extra iternations for iSAM to run -->
+
+      <rosparam param="camToOdom"> [ 1, 0, 0, 0,
+                                     0, 1, 0, 0,
+                                     0, 0, 1, 0,
+                                     0, 0, 0, 1 ] </rosparam>
+
+
+      <param name="apLocQual" type="int" value="2" /> <!-- 0: ground truth, 1: erroneous, 2: unknown -->
+
+      <!-- AP locations, num_aps x [x, y, theta], only used if apLocQual == 0, 1 -->
+      <rosparam param="apPos"> [ 0, 0, 0
+                                 0, 0, 0,
+                                 0, 0, 0] </rosparam>
+
+      <rosparam param="apsToInclude"> [1, 3, 5] </rosparam>
+
+      <!-- RSSI Filtering parameters, num_aps x 1 -->
+      <rosparam param="rssiFilter"> [-64 , -64, -64] </rosparam>
+
+      <param name="apAdditionThresh"    type="double"   value="-45" />
+
+      <!-- Min/Max Angle thresholds, in degrees -->
+      <rosparam param="angleThresh"> [-130, 130] </rosparam>
+      <rosparam param="angleThreshSquare"> [45, 135] </rosparam>
+      <param name="useSquareThresh"      type="bool" value="false" />
+
+      <!-- Initialization -->
+
+      <rosparam param="apPosPrior"> [1, 1, 360] </rosparam> <!-- Error in x, y, theta (deg) -->
+
+      <!-- Odometry noise values -->
+      <param name="odom_xy_noise"                type="double"   value="0.015" /> <!-- sigma_xy, in meters, standard deviation-->
+      <param name="odom_theta_noise"             type="double"   value="0.1" /> <!-- sigma_theta, in degrees, standard deviation -->
+
+      <!-- Noise Values for Initialization -->
+      <param name="sigma_prior_translation"      type="double"   value="0.005" />
+      <param name="sigma_prior_rotation"         type="double"   value="0.1" />
+      <param name="sigma_velocity"               type="double"   value="0.1" />
+      <param name="sigma_bias"                   type="double"   value="0.15" />
+
+      <!-- Noise priors for camera -->
+      <param name="sigma_prior_translation_camera"      type="double"   value="0.1" />
+      <param name="sigma_prior_rotation_camera"         type="double"   value="10" />
+
+      <param name="sigma_angle_bot"              type="double"   value="32" /> <!-- in degrees-->
+      <param name="sigma_angle_AP"               type="double"   value="32" /> <!-- in degrees-->
+
+      <!-- File storage params -->
+      <param name="dataDir"              type="string"   value="/home/aarun/Research/data/viofi/8-4/" />
+      <param name="graphFilename"        type="string"   value="viofi_bearing_test.dot" />
+      <param name="featuresFilename"     type="string"   value="viofi_features_test_1.txt" />
+      <param name="shouldStoreFeatures"  type="bool"     value="false" />
+
+      <param name="topicPostFix"         type="string"   value="" />
+   </node>
+
+   <!-- Play ROSBAG-->
+   <node pkg="rosbag" type="play" name="player"
+         output="log" args="--clock $(arg bag_path)" launch-prefix="xterm -geometry 95x10 -e"/>
+</launch>

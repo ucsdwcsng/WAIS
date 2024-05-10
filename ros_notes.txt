@@ -1,0 +1,8 @@
+ROS Notes: 
+1. add <<launch-prefix="xterm -e gdb -ex run --args">> flag to any node to open it with gdb
+2. For debugging symbols, run catkin_make -DCMAKE_BUILD_TYPE=Debug
+3. In GDB:
+	1. where -- prints the entire stacktrace; if with Debugging is not built, then line numbers 
+				do not show up
+4. add <<launch-prefix="valgrind -v --track-origins=yes --leak-check=full --show-leak-kinds=all">> flag to run Valgrind mem-checker
+	1. Once in Valgrind, to ensure output, use rosnode kill /vio_test1 to kill the GTSAM node. 
