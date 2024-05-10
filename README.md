@@ -25,7 +25,7 @@ This project directory contains four primary folders:
     4. [rf_msgs](./src/rf_msgs): A clone of [rf_msgs](https://github.com/ucsdwcsng/rf_msgs) message type from WiROS package.
     5. [wifi_backend](./src/wifi_backend): Main package which contains the code to run WAIS's WiFi factor graph.
    
-To install these packages, clone this repository and in the repository's root folder run: 
+To install these packages, clone this repository and in the repository's root folder run `catkin build`: 
 
 ```
 cd /home/user/
