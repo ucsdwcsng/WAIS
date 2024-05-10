@@ -1,55 +1,38 @@
 """
-This script will take input as a bag file, a csi-data mat file, AoA and AoD measurements 
-and create a new bag file with this CSI data stored in the bag. The CSI data stored will be 
-time-synced to the best extent possible. 
+Extract trajectory predictions from stored bag files into a mat file for easier post-processing
 """
-computer = ""
 
 import numpy as np
 import rosbag
 import scipy.io as sio
 import sys
 import os
-if computer == "cuda":
-   sys.path.append("/home/aditya/Research/p2slam/python/sim_proc")
-   sys.path.append("/home/aditya/Research/utilities/python")
-   sys.path.remove("/opt/ros/kinetic/lib/python2.7/dist-packages")
 from tqdm import tqdm
 import pdb
 from sensor_msgs import point_cloud2
 import gtsam
 import h5py as hio
 import matplotlib.pyplot as plt
-
-sys.path.append('/home/aarun/Research/utilities/python/')
-sys.path.append('/home/aarun/Research/p2slam/python/sim_proc/')
-sys.path.append('/home/aarun/Research/p2slam/python/')
-
 import scipy.optimize as opt
 from graph_helpers import apply_global_rot, correct_bias
 
 
 #%%
 """
-/wifio/path_robot /wifio/pose_ap 
-/cpu_monitor/wifio_test1/cpu /cpu_monitor/wifio_test1/mem 
-/cpu_monitor/feature_tracker/cpu /cpu_monitor/feature_tracker/mem 
-/vio/feature_cloud /vio/path_robot 
-/cpu_monitor/vio_test1/cpu /cpu_monitor/vio_test1/mem
+These topics must exists in the bag_dir:
+/wifio/path_robot /wifio/pose_ap -- predictions of the robot and AP positions by WAIS
+/cpu_monitor/wifio_test1/cpu /cpu_monitor/wifio_test1/mem -- cpu and memory consumptions of WAIS module
+/vio/path_robot -- Kimera or Cartographer robot path 
+/cpu_monitor/vio_test1/cpu /cpu_monitor/vio_test1/mem -- cpu and memory consumptions of VIO module (note to turn off any mapping and visualization)
 """
 
    
-bag_dir = "/home/aarun/Research/data/viofi/8-4/results_wifi_camera.bag"
-dataset_dir = "/home/aarun/Research/data/p2slam_realworld/p2slam_atk/8-28-edge-aps-3"
-
+bag_dir = "bag file path"
+saved_mat_file_name = "final_results.mat"
 #####################
 #####################
 
 input_bag_file = os.path.join(bag_dir)
-times_file = os.path.join(dataset_dir, "times.mat")
-
-opt_times = np.squeeze(sio.loadmat(times_file)["labels_time"])
-
 bag_in = rosbag.Bag(input_bag_file, 'r')
 
 ap_poses = []
@@ -62,12 +45,11 @@ vio_position = [] # realtime traj
 vio_yaw= [] # realtime traj
 vio_time = []
 
-vio_pc = None
 wifi_full_traj = None
 vio_full_traj = None
    
-cpu_consumption = {"feature_tracker":[], "vio_test1": [], "wifio_test1": []}
-mem_consumption = {"feature_tracker":[], "vio_test1": [], "wifio_test1": []}
+cpu_consumption = {"vio_test1": [], "wifio_test1": []}
+mem_consumption = {"vio_test1": [], "wifio_test1": []}
 for topic, mesg, t in tqdm(bag_in.read_messages()):
    
    if topic == "/wifio/path_robot":
@@ -98,10 +80,6 @@ for topic, mesg, t in tqdm(bag_in.read_messages()):
       vio_yaw.append(cur_yaw)
       vio_time.append(cur_time)
       vio_full_traj = mesg.poses
-      
-   elif topic == "/vio/feature_cloud":
-      vio_pc = list(point_cloud2.read_points(mesg, skip_nans=True, 
-                                             field_names = ("x", "y", "z")))
    elif topic.split("/")[-1] == "cpu":
      cpu_consumption[topic.split("/")[2]].append(mesg.data)
    elif topic.split("/")[-1] == "mem":
@@ -165,95 +143,8 @@ dict_to_save = {"wifi_position": wifi_position, "vio_position": vio_position,
                 "wifi_time_final": np.array(wifi_final_times)[:cut_point_final], 
                 "wifi_time": wifi_time,
                 "ap_poses": final_ap_poses, "memory": mem_consumption, 
-                "cpu": cpu_consumption, "pointcloud": np.array(vio_pc), 
+                "cpu": cpu_consumption,
                 "times_ap_added": times_ap_added}
-sio.savemat("final_results_8-4.mat", dict_to_save)
+sio.savemat(saved_mat_file_name, dict_to_save)
 #%%
 bag_in.close()
-
-#%% Load synced data from matlab
-synced_data = hio.File("/home/aarun/Research/data/viofi/8-4/all_labels_8-4.mat", 
-                       'r')
-synced_labels = {'labels_opt': None, 'labels_wifi_rt': None, 
-                 'labels_wifi_final': None, 'labels_vio_rt': None, 
-                 'labels_vio_final': None}
-
-for ii, key in enumerate(synced_labels.keys()):
-   synced_labels[key] = np.array(synced_data[synced_data['all_labels'][ii, 0]]).T
-
-#%% Apply RATB to all labels_wifi_* and labels_vio_*
-# apply global rotation to all the points to confirm the effects of relative
-# rotation shift
-rot_min = -180*np.pi/180
-rot_max = 180*np.pi/180
-corrected_labels = {'labels_opt': None, 'labels_wifi_rt': None, 
-                    'labels_wifi_final': None, 'labels_vio_rt': None, 
-                    'labels_vio_final': None}
-
-cut_point = 0
-pivot_point = 0
-corrected_labels['labels_opt'] = synced_labels['labels_opt'][cut_point:]
-# corrected_labels['labels_rtab'] = synced_labels['labels_rtab'][cut_point:]
-
-for cur_label in ['labels_wifi_rt', 'labels_wifi_final', 'labels_vio_rt', 
-                 'labels_vio_final']:
-   rot_best, min_err, _, _ = opt.fminbound(apply_global_rot, rot_min, rot_max, \
-                                           args=(synced_labels[cur_label][cut_point:],
-                                                 pivot_point, 
-                                                 synced_labels['labels_opt'][cut_point:]), \
-                                           full_output=True)
-   R_rotated = np.array([[np.cos(rot_best), -np.sin(rot_best)],
-                                      [np.sin(rot_best), np.cos(rot_best)]])
-   _, corrected_labels[cur_label] = apply_global_rot(rot_best, synced_labels[cur_label][cut_point:],
-                                                     pivot_point, 
-                                                     synced_labels['labels_opt'][cut_point:], 
-                                                     ret_only_err=False)
-# sio.savemat("/home/aarun/Research/data/viofi/8-28/corrected_labels_8-28.mat", 
-#             corrected_labels)
-
-#%%
-import gtsam
-
-# corrected_labels = {'labels_opt': None, 'labels_rtab': None, 'labels_wifi_rt': None, 
-#                     'labels_wifi_final': None, 'labels_vio_rt': None, 
-#                     'labels_vio_final': None}
-
-corrected_labels['labels_opt'] = synced_labels['labels_opt'][cut_point:]
-# corrected_labels['labels_rtab'] = synced_labels['labels_rtab'][cut_point:]
-
-for cur_label in ['labels_rtab', 'labels_wifi_rt', 'labels_wifi_final', 'labels_vio_rt', 
-                 'labels_vio_final']:
-   temp_labels, R, t = \
-         correct_bias(np.hstack((corrected_labels[cur_label][:, :2], np.zeros((len(corrected_labels[cur_label]), 1)))), 
-                      np.hstack((synced_labels['labels_opt'][:, :2], np.zeros((len(synced_labels[cur_label]), 1)))))
-         
-   # temp_yaw = np.diff(temp_labels, axis=0)
-   # temp_yaw = np.arctan2(temp_yaw[:, 1], temp_yaw[:, 0])
-   # temp_yaw = np.hstack((temp_yaw, temp_yaw[-1]))
-   
-   yaw_correction = gtsam.Rot3(R).yaw()
-   temp_yaw = synced_labels[cur_label][:, 2] + yaw_correction
-   corrected_labels[cur_label] = np.hstack((temp_labels[:, :2], temp_yaw[:, None]))
-#%%
-plt.figure()
-# plt.plot(synced_labels['labels_opt'][:, 0], 
-#           synced_labels['labels_opt'][:, 1])
-# plt.plot(synced_labels['labels_wifi_final'][:, 0], 
-#           synced_labels['labels_wifi_final'][:, 1])
-# plt.plot(synced_labels['labels_rtab'][:, 0], 
-#           synced_labels['labels_rtab'][:, 1])
-plt.plot(corrected_labels['labels_opt'][:, 0], 
-          corrected_labels['labels_opt'][:, 1])
-plt.plot(corrected_labels['labels_wifi_final'][:, 0], 
-          corrected_labels['labels_wifi_final'][:, 1])
-# plt.plot(corrected_labels['labels_rtab'][:, 0], 
-#           corrected_labels['labels_rtab'][:, 1])
-
-plt.figure();
-plt.plot(corrected_labels['labels_wifi_final'][:, 1]); 
-plt.plot(corrected_labels['labels_opt'][:, 1])
-
-#%%
-
-sio.savemat("/home/aarun/Research/data/viofi/8-4/corrected_labels_8-4.mat", 
-            corrected_labels)

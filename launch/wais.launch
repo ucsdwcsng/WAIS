@@ -20,7 +20,7 @@ Notes:
    <arg name="rvizfile"    default = "$(find wifi_backend)/../../rviz/wifi.rviz" />
 
    <!-- Download the dataset and add the path of the bag file here -->
-   <arg name="bag_path"    default = "/media/aarun/wd_backup/p2slam_realworld/viwid_bags/7-22-short.bag" />
+   <arg name="bag_path"    default = "path/to/dataset bag file" />
 
    <!-- PLOTTING - plot the camera and robot odometry information in RVIZ -->
    <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rvizfile)"/>

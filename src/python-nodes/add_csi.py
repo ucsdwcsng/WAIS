@@ -80,19 +80,11 @@ def combine_bag(bag_in, bag_out, csi_data, angle_data):
 if __name__ == "__main__":
 
    
-   # dataset_dir = "/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/p2slam_atk/8-26-atkinson-4th"
-   # angles_dir = "/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/results/8-26-atkinson-4th"
-   # dataset_dir = "/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/p2slam_atk/8-28-edge-aps-3"
-   # angles_dir = "/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/results/8-28-edge-aps-3"
    dataset_dir = "/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/p2slam_atk/11-22-atkinson-1st"
    angles_dir = "/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/results/11-22-atkinson-1st"
-   # dataset_dir = "/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/p2slam_atk/8-4-atkinson2"
-   # angles_dir = "/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/results/8-4-atkinson2"
-   # dataset_dir = "/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/p2slam_atk/8-4-atkinson2"
-   # angles_dir = "/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/results/8-4-atkinson2/no_opt"
 
    bag_name = "data_short.bag"
-   cartographer_folder = "2021-11-22-16-12-04" # "2021-08-28-20-18-18", "2021-08-26-11-12-04, "2021-08-04-22-02-38"
+   cartographer_folder = "2021-11-22-16-12-04"
    algorithm = "svd_fft"
    all_odom_post_fix =  ""
    
