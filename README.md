@@ -5,14 +5,13 @@ Instead, WAIS (<u>W</u>iFi <u>A</u>ssisted <u>I</u>ndoor <u>S</u>LAM) demonstrat
 
 By covering over 1500 m in realistic indoor environments and WiFi deployments, we showcase 4.3 x and 4 x reduction in compute and memory consumption compared to state-of-the-art Visual and Lidar SLAM systems. Incorporating WiFi into the sensor stack also improves the resiliency of the Visual-SLAM system. We find the 90th percentile translation errors improve by ~40% and orientation errors by ~60% compared with purely camera-based systems. 
 
----
-
+<p align="center"><img src="./wais_overview.png" width="500" /></p>
+    
 ## Contents
 1. [Usage](#usage)
 2. [Dataset Information and Download](#dataset-information-and-download)
 3. [Citation](#citation)
 
----
 ## Usage
 
 This project directory contains four primary folders:
