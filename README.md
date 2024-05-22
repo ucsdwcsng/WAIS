@@ -10,7 +10,8 @@ By covering over 1500 m in realistic indoor environments and WiFi deployments, w
 ## Contents
 1. [Usage](#usage)
 2. [Dataset Information and Download](#dataset-information-and-download)
-3. [Citation](#citation)
+3. [WiROS data collection module](#wiros-platform)
+4. [Citation](#citation)
 
 ## Usage
 
@@ -101,6 +102,9 @@ topics:      /aoa                                        14634 msgs    : rf_msgs
              /tf                                        239589 msgs    : tf2_msgs/TFMessage         
              /tf_static  
 ```
+## WiROS Platform
+
+This work also open-sources the WiROS platform, which allows researchers to conveniently collect WiFi CSI information and process this information to extract AoA and ToF of the received signal. More details can be found [here](https://github.com/ucsdwcsng/WiROS).
 
 ## Citation
 
