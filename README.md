@@ -115,10 +115,11 @@ This work also open-sources the WiROS platform, which allows researchers to conv
 If you have found this work useful, please cite us as following: 
 
 ```
-@article{arun2022viwid,
-title={ViWiD: Leveraging WiFi for Robust and Resource-Efficient SLAM},
-author={Arun, Aditya and Hunter, William and Ayyalasomayajula, Roshan and Bharadia, Dinesh},
-journal={arXiv preprint arXiv:2209.08091},
-year={2022}
+@inproceedings{arun2024wais,
+  title={WAIS: Leveraging WiFi for Resource-Efficient SLAM},
+  author={Arun, Aditya and Hunter, William and Ayyalasomayajula, Roshan and Bharadia, Dinesh},
+  booktitle={Proceedings of the 22nd Annual International Conference on Mobile Systems, Applications and Services},
+  pages={561--574},
+  year={2024}
 }
 ```
