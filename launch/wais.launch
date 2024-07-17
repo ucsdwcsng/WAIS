@@ -41,9 +41,9 @@ Notes:
    <node name="image_decompress_1" pkg="image_transport" type="republish"
          args="compressed in:=/camera/infra1/image_rect_raw raw out:=/infra_left"/>
 
-   <!-- MASTER NODE! -->
+   <!-- MASTER NODE!-->
    <node pkg="wifi_backend" type="wifio" name="wifio_test1" output="screen" clear_params="true"
-         required="true" launch-prefix="gdb -ex run --args">
+         required="true">
 
       <remap from="/wifio/data_cam"    to="/camera/color/image_raw/compressed" />
       <remap from="/wifio/data_rel_odom"  to="/relOdom" />
