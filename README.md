@@ -5,14 +5,18 @@ Instead, WAIS (<u>W</u>iFi <u>A</u>ssisted <u>I</u>ndoor <u>S</u>LAM) demonstrat
 
 By covering over 1500 m in realistic indoor environments and WiFi deployments, we showcase 4.3 x and 4 x reduction in compute and memory consumption compared to state-of-the-art Visual and Lidar SLAM systems. Incorporating WiFi into the sensor stack also improves the resiliency of the Visual-SLAM system. We find the 90th percentile translation errors improve by ~40% and orientation errors by ~60% compared with purely camera-based systems. 
 
----
+<p align="center"><img src="./wais_overview.png" width="500" /></p>
+
+The following video showcases WAIS's performance on the dataset provided below. You may use the code here to recreate this demo as a starting point. 
+
+<p align="center"><a href="https://www.youtube.com/watch?v=FIAdBC_UzPU"><img src="https://img.youtube.com/vi/FIAdBC_UzPU/0.jpg" width=500/></a></p>
 
 ## Contents
 1. [Usage](#usage)
 2. [Dataset Information and Download](#dataset-information-and-download)
-3. [Citation](#citation)
+3. [WiROS data collection module](#wiros-platform)
+4. [Citation](#citation)
 
----
 ## Usage
 
 This project directory contains four primary folders:
@@ -26,7 +30,7 @@ This project directory contains four primary folders:
     4. [rf_msgs](./src/rf_msgs): A clone of [rf_msgs](https://github.com/ucsdwcsng/rf_msgs) message type from WiROS package.
     5. [wifi_backend](./src/wifi_backend): Main package which contains the code to run WAIS's WiFi factor graph.
    
-To install these packages, clone this repository and in the repository's root folder run: 
+To install these packages, clone this repository and in the repository's root folder run `catkin build`: 
 
 ```
 cd /home/user/
@@ -102,16 +106,20 @@ topics:      /aoa                                        14634 msgs    : rf_msgs
              /tf                                        239589 msgs    : tf2_msgs/TFMessage         
              /tf_static  
 ```
+## WiROS Platform
+
+This work also open-sources the WiROS platform, which allows researchers to conveniently collect WiFi CSI information and process this information to extract AoA and ToF of the received signal. More details can be found [here](https://github.com/ucsdwcsng/WiROS).
 
 ## Citation
 
 If you have found this work useful, please cite us as following: 
 
 ```
-@article{arun2022viwid,
-title={ViWiD: Leveraging WiFi for Robust and Resource-Efficient SLAM},
-author={Arun, Aditya and Hunter, William and Ayyalasomayajula, Roshan and Bharadia, Dinesh},
-journal={arXiv preprint arXiv:2209.08091},
-year={2022}
+@inproceedings{arun2024wais,
+  title={WAIS: Leveraging WiFi for Resource-Efficient SLAM},
+  author={Arun, Aditya and Hunter, William and Ayyalasomayajula, Roshan and Bharadia, Dinesh},
+  booktitle={Proceedings of the 22nd Annual International Conference on Mobile Systems, Applications and Services},
+  pages={561--574},
+  year={2024}
 }
 ```
