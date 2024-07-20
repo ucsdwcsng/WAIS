@@ -56,6 +56,8 @@ Run the launch file. This should open a termux window to play the bag file and a
 roslaunch ./launch/wais.launch
 ```
 
+**Note: This version of WAIS compiles with GTSAM commit id d3544d4c06. Please checkout this commit and install it.**
+
 ## Dataset Information and Download
 
 We provided the WAIS dataset to test this code. The dataset can be downloaded by agreeing to the terms and conditions and filling up [this form](https://forms.gle/XWLLBnWsMct1BRnR8). You will receive instructions to download the dataset via the provided email.
