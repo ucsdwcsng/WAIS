@@ -20,7 +20,12 @@ Notes:
    <arg name="rvizfile"    default = "$(find wifi_backend)/../../rviz/wifi.rviz" />
 
    <!-- Download the dataset and add the path of the bag file here -->
-   <arg name="bag_path"    default = "path/to/dataset bag file" />
+   <arg name="bag_path"    default = "/media/aarun/wd_backup/p2slam_realworld/viwid_bags/7-22-short_w_paths.bag" />
+
+   <!-- Store the factor graph and other debugging information  -->
+   <arg name="debug_path"    default = "/path/to/store debug info" />
+   <arg name="store_debug"   default= "false" />
+
 
    <!-- PLOTTING - plot the camera and robot odometry information in RVIZ -->
    <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rvizfile)"/>
@@ -38,12 +43,12 @@ Notes:
    </include>
 
    <!-- Image decompressor -->
-   <node name="image_decompress_1" pkg="image_transport" type="republish"
+   <node name="image_decompress" pkg="image_transport" type="republish"
          args="compressed in:=/camera/infra1/image_rect_raw raw out:=/infra_left"/>
 
    <!-- MASTER NODE! -->
-   <node pkg="wifi_backend" type="wifio" name="wifio_test1" output="screen" clear_params="true"
-         required="true" launch-prefix="gdb -ex run --args">
+   <node pkg="wifi_backend" type="wifio" name="wifio_test" output="screen" clear_params="true"
+         required="true">
 
       <remap from="/wifio/data_cam"    to="/camera/color/image_raw/compressed" />
       <remap from="/wifio/data_rel_odom"  to="/relOdom" />
@@ -80,7 +85,7 @@ Notes:
       <param name="apLocQual" type="int" value="2" /> <!-- 0: ground truth, 1: erroneous, 2: unknown -->
 
       <!-- AP locations, num_aps x [x, y, theta], only used if apLocQual == 0, 1 -->
-      <rosparam param="apPos"> [ 0, 0, 0
+      <rosparam param="apPos"> [ 0, 0, 0,
                                  0, 0, 0,
                                  0, 0, 0] </rosparam>
 
@@ -118,10 +123,10 @@ Notes:
       <param name="sigma_angle_AP"               type="double"   value="32" /> <!-- in degrees-->
 
       <!-- File storage params -->
-      <param name="dataDir"              type="string"   value="/home/aarun/Research/data/viofi/8-4/" />
+      <param name="dataDir"              type="string"   value="$(arg debug_path)" />
       <param name="graphFilename"        type="string"   value="viofi_bearing_test.dot" />
-      <param name="featuresFilename"     type="string"   value="viofi_features_test_1.txt" />
-      <param name="shouldStoreFeatures"  type="bool"     value="false" />
+      <param name="featuresFilename"     type="string"   value="viofi_features_test.txt" />
+      <param name="shouldStoreFeatures"  type="bool"     value="$(arg store_debug)" />
 
       <param name="topicPostFix"         type="string"   value="" />
    </node>

@@ -17,6 +17,7 @@ install/
 logs/
 **/**/pickles
 **/**/.idea
+**/*.rviz
 # Prerequisites
 *.d
 
@@ -49,3 +50,6 @@ logs/
 *.exe
 *.out
 *.app
+
+# Launch files 
+launch/wais.launch
