@@ -20,7 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-find_package(PCL REQUIRED)
+# find_package(PCL REQUIRED)
 find_package(Boost REQUIRED timer)
 find_package(GTSAM REQUIRED)
 find_package(MKL REQUIRED)
